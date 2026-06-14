@@ -1,0 +1,13 @@
+{
+  "name": "react-architecture-plugin",
+  "owner": {
+    "name": "kimchanghoe"
+  },
+  "description": "React, Next.js, React Router 개발 컨벤션 플러그인 모음",
+  "plugins": [
+    {
+      "name": "react-architecture-plugin",
+      "source": "./"
+    }
+  ]
+}
