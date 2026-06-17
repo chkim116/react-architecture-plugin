@@ -123,6 +123,63 @@ function useIsMountedRef() {
 
 ```
 
+## createStorage
+
+- `localStorage`/`sessionStorage`를 다루기 위한 팩토리 함수이다.
+- [storage.md](./storage.md)의 `*.storage.ts` 파일에서 이 함수로 인스턴스를 만들어 사용한다.
+
+```ts
+// createStorage.ts
+
+/**
+ * @description
+ * `createStorage`는 `localStorage`/`sessionStorage`를 다루기 위한 팩토리 함수입니다.
+ * 값을 저장/조회/삭제할 때 JSON 직렬화·역직렬화를 자동으로 처리하고,
+ * 파싱에 실패하거나 값이 없는 경우 `null`을 반환합니다.
+ *
+ * @param key storage에 저장될 때 사용할 키
+ * @param storage 사용할 storage. 기본값은 `localStorage`
+ * @returns `{ get, set, remove }`로 구성된 storage 인스턴스
+ *
+ * @example
+ * interface AuthTokens {
+ *   accessToken: string;
+ *   refreshToken: string;
+ * }
+ *
+ * const authStorage = createStorage<AuthTokens>('auth-tokens');
+ *
+ * authStorage.set({ accessToken: 'a', refreshToken: 'b' });
+ * const tokens = authStorage.get(); // AuthTokens | null
+ * authStorage.remove();
+ */
+export function createStorage<T>(key: string, storage: Storage = localStorage) {
+  function get(): T | null {
+    const raw = storage.getItem(key);
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  function set(value: T) {
+    storage.setItem(key, JSON.stringify(value));
+  }
+
+  function remove() {
+    storage.removeItem(key);
+  }
+
+  return { get, set, remove };
+}
+```
+
 ## useQueryParser
 
 - URL 파라미터를 파싱하는 훅이다.

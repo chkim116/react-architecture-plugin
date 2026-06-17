@@ -73,3 +73,145 @@ return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(haversineSum), Math.sqrt(1 - h
 | `cb` | callback 축약 | `onSuccess`, `onComplete` 등 역할 명시 |
 | `res`, `req` | 단순 축약 | `response`, `request` |
 | `e` (이벤트 외) | 이벤트 핸들러 파라미터 외에는 금지 | 실제 의미 명시 |
+
+## `void` 키워드 미사용
+
+- `void` 키워드를 사용하지 않는다. 반환값을 의도적으로 무시해야 할 이유가 없다.
+
+```ts
+// Bad
+void fetchData();
+
+// Good
+fetchData();
+```
+
+## 즉시실행함수(IIFE) 미사용
+
+- 즉시실행함수(IIFE)를 사용하지 않는다. 구현과 실행을 동시에 둘 필요 없이, 함수로 정의하고 별도로 호출한다.
+
+```ts
+// Bad
+const result = (() => {
+  const base = getBaseValue();
+  return base * 2;
+})();
+
+// Good
+function calculateResult() {
+  const base = getBaseValue();
+  return base * 2;
+}
+
+const result = calculateResult();
+```
+
+## Early Return 패턴
+
+- if-else 대신 조건에 맞지 않는 경우를 먼저 반환(early return)하고, 본문은 정상 흐름만 남긴다.
+
+```ts
+// Bad
+function getDiscountedPrice(user: User, price: number) {
+  if (user.isMember) {
+    if (price > 0) {
+      return price * 0.9;
+    } else {
+      return 0;
+    }
+  } else {
+    return price;
+  }
+}
+
+// Good
+function getDiscountedPrice(user: User, price: number) {
+  if (!user.isMember) {
+    return price;
+  }
+
+  if (price <= 0) {
+    return 0;
+  }
+
+  return price * 0.9;
+}
+```
+
+## `console.log` 사용 금지
+
+- `console.log`는 디버깅 용도로만 임시 사용하고, 작업 완료 후 코드에서 제거한다. 프로덕션 코드에 포함되지 않도록 한다.
+
+```ts
+// Bad
+function handleSubmit(formData: FormData) {
+  console.log('formData', formData);
+  submitForm(formData);
+}
+
+// Good
+function handleSubmit(formData: FormData) {
+  submitForm(formData);
+}
+```
+
+## `for` 대신 `forEach`
+
+- 배열을 순회할 때는 `forEach`를 기본으로 사용한다. 중간에 순회를 멈춰야 하거나 `for`가 꼭 필요한 경우에만 `for`문을 사용한다.
+
+```ts
+// Bad
+for (let i = 0; i < users.length; i++) {
+  sendNotification(users[i]);
+}
+
+// Good
+users.forEach((user) => {
+  sendNotification(user);
+});
+
+// for문이 필요한 경우 (중간에 멈춰야 할 때)
+for (const user of users) {
+  if (user.isBlocked) {
+    break;
+  }
+  sendNotification(user);
+}
+```
+
+## 타입 단언 금지
+
+- `as any`, `as unknown` 등 타입 단언을 사용하지 않는다. 타입이 맞지 않으면 실제 타입을 먼저 확인한다.
+
+```ts
+// Bad
+const user = response.data as any;
+
+// Bad
+const config = rawConfig as unknown as AppConfig;
+
+// Good — 실제 타입을 확인하고 타입에 맞게 처리
+const user: UserResponse = response.data;
+```
+
+## 엄격한 동등 비교
+
+- `==` 대신 `===`를 사용한다.
+- `== null` 같은 비교 대신 falsy/truthy 비교를 우선 사용한다. `null`과 `undefined`를 구분해야 하는 경우에만 `=== null`, `=== undefined`를 명시한다.
+
+```ts
+// Bad
+if (value == null) {
+  return;
+}
+
+// Good
+if (!value) {
+  return;
+}
+
+// null과 undefined를 구분해야 하는 경우에만 명시
+if (value === null) {
+  return;
+}
+```

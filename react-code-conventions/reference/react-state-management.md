@@ -22,6 +22,39 @@ const [state, setState] = useState<State>({
   error: null,});
 ```
 
+## 객체 state 갱신 패턴
+
+- 객체 state(폼 등)를 갱신할 때, 필드별로 핸들러를 각각 만들지 않는다.
+- `key`와 `value`를 받아 해당 필드만 갱신하는 단일 핸들러를 만든다.
+
+### 잘못된 사용
+
+```tsx
+const handleTitleChange = (next: string) =>
+  setDraft((prev) => ({ ...prev, title: next }));
+const handleBodyChange = (next: string) =>
+  setDraft((prev) => ({ ...prev, body: next }));
+const handleTagsInputChange = (next: string) =>
+  setDraft((prev) => ({ ...prev, tagsInput: next }));
+```
+
+### 올바른 사용
+
+```tsx
+const handleFormChange = <K extends keyof Draft>(key: K, value: Draft[K]) => {
+  setDraft((prev) => ({ ...prev, [key]: value }));
+};
+```
+
+- Component에는 필드별 `onTitleChange`, `onBodyChange` 등을 각각 전달하지 않고, `onFormChange` 하나만 전달한다.
+
+```tsx
+interface PostEditorProps {
+  draft: Draft;
+  onFormChange: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
+}
+```
+
 ## useRef 네이밍 규칙
 | 구분 | 패턴 | 예시 |
 |------|------|------|

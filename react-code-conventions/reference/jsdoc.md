@@ -57,3 +57,8 @@ sortBy: 'date' | 'distance';
 - 훅 반환 타입, 모델, API 타입, 파라미터 훅 등
 
 **제외:** 컴포넌트 props interface (`*Props`) — 필드명으로 충분히 의도 파악 가능하다.
+
+## Container/Component/Page vs Shared 모듈
+
+- Container, Component, Page는 위 "제외" 기준을 따라 props interface에 JSDoc을 강제하지 않는다. 작업 맥락에서 쓰임이 명확하기 때문이다.
+- 반대로 `shared-modules.md`에 정의되는 공용 훅/함수처럼 여러 프로젝트나 작업자가 재사용하는 코드는, 라이브러리 함수에 주석을 다는 것과 같은 이유로 JSDoc을 적극적으로 작성한다. (`useLoading`, `useQueryParser` 참고)

@@ -32,6 +32,8 @@ description: React 프로젝트 코드 작성 시 사용. 컴포넌트, 훅, API
 | interface/type JSDoc | `react-code-conventions/reference/jsdoc.md` |
 | 사용 패키지 확인 | `react-code-conventions/reference/packages.md` |
 | 공용 모듈 확인 | `react-code-conventions/reference/shared-modules.md` |
+| localStorage/sessionStorage 사용 | `react-code-conventions/reference/storage.md` |
+| 환경변수 사용 | `react-code-conventions/reference/env-config.md` |
 
 > 경로는 플러그인 루트 기준 상대경로.
 > 라우팅 작업은 react-router-conventions 또는 nextjs-conventions 스킬 참조.
