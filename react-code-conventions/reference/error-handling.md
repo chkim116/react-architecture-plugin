@@ -42,15 +42,19 @@ async function handleSpin() {
 async function handleSpin() {
   try {
     await spinMutation.mutateAsync();
-  } catch (error) {
+  } catch {
     // 사용자에게 에러 표시 (toast, confirm, alert 중 적절한 방식 선택)
   }
 }
 ```
 
+> **안 쓰는 에러 바인딩은 생략**: `error`를 안 쓰면 `catch (error)`가 lint(`no-unused-vars`)와 충돌 → 쓸 때만 `catch (error)`, 안 쓰면 `catch {`. (삼키진 않되 바인딩만 생략)
+
 ## 에러 피드백 종류
 
 에러를 사용자에게 알리는 방식은 toast, confirm, alert 세 가지로 분류한다. 상황에 맞는 종류를 선택한다.
+
+> 특정 피드백(예: 실패 시 무조건 toast)을 강제하지 않는다. 작업자가 상황에 맞는 **적절한 UX 피드백**을 선택하되, 에러를 조용히 삼키지는 않는다.
 
 | 종류 | 사용 시점 | 특징 |
 |------|-----------|------|
@@ -63,7 +67,7 @@ async function handleSpin() {
 async function handleLike() {
   try {
     await likeMutation.mutateAsync();
-  } catch (error) {
+  } catch {
     showToast('좋아요 처리에 실패했습니다.');
   }
 }
@@ -72,7 +76,7 @@ async function handleLike() {
 async function handleSubmit() {
   try {
     await submitMutation.mutateAsync();
-  } catch (error) {
+  } catch {
     const shouldRetry = await showConfirm('제출에 실패했습니다. 다시 시도할까요?');
     if (shouldRetry) {
       handleSubmit();
@@ -84,7 +88,7 @@ async function handleSubmit() {
 async function handlePayment() {
   try {
     await paymentMutation.mutateAsync();
-  } catch (error) {
+  } catch {
     showAlert('결제에 실패했습니다. 잠시 후 다시 시도해주세요.');
   }
 }

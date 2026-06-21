@@ -9,6 +9,7 @@ description: React Router 기반 프로젝트에서 라우팅, 네비게이션, 
 
 - `common-code-conventions/reference/code-style.md`
 - `common-code-conventions/reference/abstraction.md`
+- `common-code-conventions/reference/utilities.md`
 
 ## 작업 유형별 참조 문서
 

@@ -22,6 +22,10 @@ const [state, setState] = useState<State>({
   error: null,});
 ```
 
+### 객체화 임계 — "몇 개부터"
+
+*개수*가 아니라 아래일 때만 객체로 묶는다: ① **항상 함께 갱신**(위 예의 `value`/`isLoading`/`error` — fetch 흐름이라 같이 바뀜, 개수가 3이라서가 아님) ② 무관한 상태 **4개 이상**. 독립적 2~3개는 개별 `useState`가 명확 — 강제 객체화는 과적용([abstraction.md](../../common-code-conventions/reference/abstraction.md)).
+
 ## 객체 state 갱신 패턴
 
 - 객체 state(폼 등)를 갱신할 때, 필드별로 핸들러를 각각 만들지 않는다.
@@ -53,6 +57,15 @@ interface PostEditorProps {
   draft: Draft;
   onFormChange: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
 }
+```
+
+## useRef 사용 기준 — 라이프사이클을 벗어날 때만
+
+`useRef`는 **렌더로 표현할 수 없는** 가변 값(타이머/raf 핸들, 동기 중복 가드, DOM 참조)에만. 화면에 반영돼야 하는 값은 ref가 아니라 state — ref는 바꿔도 리렌더가 안 된다.
+
+```tsx
+const [isOpen, setIsOpen] = useState(false); // ✅ 화면 반영 → state
+const refIsSubmitting = useRef(false);       // ✅ 동기 중복 가드 → ref
 ```
 
 ## useRef 네이밍 규칙

@@ -59,3 +59,23 @@ function SpinContainer() {
   );
 }
 ```
+
+## 예외 1: 콜백을 주입받는 hook은 의존 대상 직후에 둔다
+
+다른 handler/hook을 **인자로 주입받는** hook은 "fetching=상단(2)"의 예외다. 주입 대상(handler=5)에 의존하므로 상단에 올리면 **TDZ로 깨진다** → 의존 대상 정의 **직후**에 둔다.
+
+```ts
+function handleAdRewardEarned() { /* ... */ }
+// 상단(fetching)이 아니라 여기 — handleAdRewardEarned에 의존
+const { showAd } = useSharedAdReward({ onRewardEarned: handleAdRewardEarned });
+```
+
+## 예외 2: 파생값은 의존 대상 직후, 사용처 직전에 둔다
+
+`const canSpin = coinBalance >= SPIN_COST` 같은 파생값(memo·계산)은 1~7에 자리가 없다 → **의존 대상(state·hook 결과) 바로 뒤, 사용처 바로 앞**에 둔다.
+
+```ts
+const [coinBalance] = useState(0);          // 3. state
+const canSpin = coinBalance >= SPIN_COST;   // 파생값 — 의존 직후
+function handleSpinClick() { /* canSpin 사용 */ }  // 5. handler
+```

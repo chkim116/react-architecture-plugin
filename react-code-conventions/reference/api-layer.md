@@ -44,7 +44,8 @@ fetchHomeDetailHomeDetailHome  // HomeDetail가 ApiName에 이미 포함됨
 ```
 
 **작성 규칙**
-- `axios` 사용.
+- `axios` 직접 사용. 래핑은 옵셔널이라 raw axios 직접 호출도 무방하다.
+- (선택) core에 http client 래퍼(`createHttpClient` 등)를 두었다면 그것을 import해서 쓴다. 상세: [modules.md](./modules.md)
 - 모든 타입 필드에 JSDoc 주석 필수
 
 **JSDoc 규칙**

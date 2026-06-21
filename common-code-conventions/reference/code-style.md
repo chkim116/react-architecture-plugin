@@ -215,3 +215,31 @@ if (value === null) {
   return;
 }
 ```
+
+## 관용 (Idiom)
+
+코드리뷰로만 잡히던 관용을 규칙화한다. (React 전용 `useRef` 사용 기준은 react-state-management.md.)
+
+- **`.then` 대신 `async/await` + try-catch** (흐름이 위→아래로 읽힘).
+
+```ts
+// Bad: fetchUser().then(setUser).catch(showError)
+// Good:
+async function load() { try { setUser(await fetchUser()); } catch { showError(); } }
+```
+
+- **이질 `if/else` 분기 → 룩업 테이블** (분기 추가 = 데이터 추가). 단, 분기 본문이 이질적이면 if/else가 맞다.
+
+```ts
+// Bad: let msg; if (phase==='win') msg='축하'; else if ...
+// Good:
+const MESSAGE_BY_PHASE = { win: '축하해요', lose: '아쉬워요', idle: '진행 중' } as const;
+const message = MESSAGE_BY_PHASE[phase];
+```
+
+- **2곳+ 반복 → 순수 함수, 단일 사용처 → 인라인** ([abstraction.md](./abstraction.md)).
+
+```ts
+// Bad: const invalidateUser = () => qc.invalidateQueries(opts); invalidateUser(); // 한 곳만
+// Good: qc.invalidateQueries(opts);
+```

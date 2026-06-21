@@ -16,11 +16,15 @@
 ├─────────────────────────────────────────────────────────────┤
 │                     Shared Layer                            │
 │  src/shared/                                                │
-│  역할: Feature-agnostic 인프라, 횡단관심사                    │
+│  역할: 여러 feature가 공유하는 횡단관심사 (도메인 인지)      │
 ├─────────────────────────────────────────────────────────────┤
 │                    External Layer                           │
 │  src/external/                                              │
 │  역할: 외부 시스템 I/O (API, Storage, AppBridge)             │
+├─────────────────────────────────────────────────────────────┤
+│                      Core Layer                             │
+│  src/core/                                                  │
+│  역할: 무의존·non-React 원시 모듈/config (env, storage factory) │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -28,9 +32,10 @@
 
 | 레이어 | 의존 가능 | 의존 불가 |
 |--------|----------|----------|
-| **Feature** | Shared, External | 다른 Feature |
-| **Shared** | External | Feature |
-| **External** | Shared (인프라 유틸만) | Feature |
+| **Feature** | Shared, External, Core | 다른 Feature |
+| **Shared** | External, Core | Feature |
+| **External** | Core | Shared, Feature |
+| **Core** | (없음) | External, Shared, Feature |
 
 ## 4. Architectural Invariants
 > 이 규칙들은 코드베이스 전반에서 **반드시 지켜져야 하는 불변식**입니다.
@@ -50,11 +55,27 @@
    - `external/apis/`는 HTTP 호출만 담당
    - React 코드, 비즈니스 로직 포함 금지
    - 필요한 데이터 변환은 Feature에서 수행
-3. **역방향 의존성 금지**
-   - 의존성 방향: `app → shared → external`
-   - `shared/` → `app/` import 금지
-   - `external/` → `app/` import 금지
-   - `external/` → `shared/` import 허용 (인프라 유틸: NetworkKit, createStorage 등)
+3. **Core는 무의존 원시 레이어다**
+   - `src/core/`는 상위 레이어(features·shared·external)를 import 하지 않는다 (내부 의존 0). npm 라이브러리·다른 core 모듈은 무방
+   - non-React 순수 모듈/config만 위치 (`envConfig`, `createStorage` 팩토리 등)
+   - External도 Core를 의존하므로 (예: API base URL), External보다 아래에 둔다
+4. **역방향 의존성 금지**
+   - 의존성 방향: `features → shared → external → core`
+   - `shared/` → `features/` import 금지
+   - `external/` → `features/` import 금지
+   - `external/` → `shared/` import 금지, `external/` → `core/` import 허용 (인프라 원시 모듈: createStorage, envConfig 등)
+   - `core/`는 어떤 레이어도 import 하지 않음 (무의존)
+5. **역방향 의존이 생기면 "누가 정하는 값인지" 본다**
+   - 아래 레이어가 위 레이어 것을 가져다 써서 역방향 import가 생겼다면, 그게 **부르는 쪽이 정할 값**인지 **공용 설비**인지부터 본다.
+
+   | 무엇을 가져왔나 | 어떻게 푸나 |
+   |------|------|
+   | **부르는 쪽이 정할 값·맥락** — 오늘 날짜, 신규 코인 30처럼 그때그때 정해지는 값 | 아래 레이어는 **함수 인자로 받기만** 하고, 부르는 쪽이 넘긴다. 값 만드는 코드는 원래 자리(shared)에 그대로 둔다 |
+   | **도메인 모르는 공용 설비** — DB·HTTP 클라이언트, 저장소(storage) | **core로 내린다** (external이 쓸 수 있는 레이어는 core뿐이므로) |
+
+   - "external이 가져다 쓰니까 core" 규칙은 **공용 설비일 때만** 맞다. 부르는 쪽이 정할 값을 core로 올리면 얼핏 맞아 보여도 틀린 선택이다.
+   - 예: external API가 "오늘 날짜"로 조회한다면 — 오늘 날짜는 부르는 쪽이 정할 값이다. API가 날짜를 인자로 받게 하고 부르는 쪽이 넘긴다(날짜 만드는 함수는 shared에 그대로). 신규 유저 코인 같은 고정 숫자도 마찬가지로 인자로 넘긴다.
+   - core와 external 사이에서도 같다: [modules.md](./modules.md) §core 래핑 경계의 "주입(넘겨주기)" 주의 참조.
 
 ### 4.2 컴포넌트 규칙
 

@@ -129,3 +129,48 @@
    return useSuspenseQuery(HomeDetailStatusQueryOptions);
  }
  ```
+
+### `select`로 1차 변환 — 1:N이라고 select를 버리지 않는다
+
+응답→모델 **1차 변환은 항상 `select`**. 1:N이라도 주 모델은 select, **시간·모델 간 의존 2차 파생만** Container에 남긴다.
+
+```tsx
+const { data: coupon } = useCouponSuspenseQuery();          // select: toCouponModel (1차)
+const isExpiringSoon = getDaysUntil(coupon.expiresAt) <= 3; // new Date() 의존 → Container 2차 파생
+```
+
+### 다중 suspense 쿼리는 `useSuspenseQueries`로 병렬화
+
+suspense 쿼리를 **2개 이상** 쓰면 `useSuspenseQueries`로 병렬화한다 — 연달아 호출하면 **워터폴**(앞이 끝나야 뒤 시작). 뒤 쿼리가 앞 결과에 *진짜* 의존할 때만 직렬.
+
+```tsx
+// ❌ 워터폴: const {data:user}=useUserQ(); const {data:att}=useAttQ(user.id);
+// ✅ 병렬:
+const [{ data: user }, { data: att }] = useSuspenseQueries({
+  queries: [userQueryOptions(ID), attendanceQueryOptions(ID)],
+});
+```
+
+### 명령형 prefetch / 읽기 — `ensureQueryData`
+
+컴포넌트 렌더링이 아니라 **이벤트 핸들러·로더 등에서 GET 데이터를 미리 가져오거나 한 번 읽어야 할 때**는 같은 `queryOptions`를 `queryClient.ensureQueryData`에 넘긴다. 캐시에 있으면 그 값을, 없으면 fetch 후 캐시에 채워 반환한다.
+
+- 직접 `api`를 호출하지 않고 항상 `queryOptions`를 거친다. → queryKey·캐시·`select` 모델링을 그대로 재사용한다.
+- 반환값도 `select`로 변환된 UI 모델이므로, [data-modeling.md](./data-modeling.md) 원칙이 동일하게 적용된다.
+
+```tsx
+import { useQueryClient } from '@tanstack/react-query';
+import { homeDetailQueryOptions } from '../queries/useHomeDetailSuspenseQuery';
+
+function SomeContainer() {
+  const queryClient = useQueryClient();
+
+  const handlePrefetchClick = async () => {
+    // 캐시에 있으면 캐시값, 없으면 fetch 후 반환 (select 모델 적용됨)
+    const homeDetail = await queryClient.ensureQueryData(homeDetailQueryOptions);
+    // ...
+  };
+}
+```
+
+> `ensureQueryData`는 GET(읽기)에만 사용한다. POST/PUT/DELETE는 [error-handling.md](./error-handling.md)대로 Container에서 직접 호출한다.

@@ -1,0 +1,9 @@
+{
+  "name": "react-architecture-plugin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint:links": "node scripts/check-links.mjs",
+    "prepare": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config core.hooksPath .githooks || true"
+  }
+}
