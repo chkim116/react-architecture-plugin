@@ -32,3 +32,7 @@ export const REFERRER_TYPE = {
   COUPON_CODE: 'coupon_code',
 } as const;
 ```
+
+## 로컬 UI 상수는 co-location — 공유될 때만 `constants/`로 승격
+
+단일 컴포넌트 전용 렌더 상수(`REEL_SIZE` 등)는 그 파일 **모듈 스코프**에 둔다(co-location). **2개 이상 모듈이 공유할 때만** `constants/`로 승격([abstraction.md](../../common-code-conventions/reference/abstraction.md)). 의미 있는 매직넘버는 위치 무관하게 명명 상수로(`REEL_STOP_DURATION`).

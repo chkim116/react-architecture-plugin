@@ -26,30 +26,51 @@
  }
  ```
  
+ ## model 함수의 경계 — 변환은 model, 생성기는 utils
+
+ 데이터 모델링은 **양방향**이다: 서버→도메인(`to{Model}`) + **도메인→서버 변환도 model**(이때 서버 모델 = API request 타입, 예 `PostSpinParams`). 판정은 내부 복잡도가 아니라 **입출력 경계**로 한다.
+
+ 1. **한쪽이 서버 모델(응답 *또는* request 타입)인 변환 = model** (`to{Model}`, 계산 포함해도 변환).
+    - 서버→도메인 `toAttendanceStreakModel`, 도메인→서버 `toPostSpinParams`(→ `external/apis/types/` request 타입 import 허용).
+    - **판정 함수도 변환**: 서버 응답→boolean/number(`canX`/`getRemainingX`)도 model — 가능하면 모델 필드로 흡수해 `select`로 올린다.
+ 2. **무→도메인 생성기·비결정적(`Math.random`) = utils.** 입력이 이미 도메인이거나 `new Date()` 시각 의존 뷰 구성도 utils. (예: `spinSlot()`)
+ 3. **타입(`{X}Model`/`{X}Type`)은 항상 models** — 함수가 utils로 가도 타입은 남는다.
+
+ ```typescript
+ // model: 변환(도메인→서버)
+ export function toPostSpinParams(result: SpinResultModel, userId: string): PostSpinParams { /* ... */ }
+ // utils: 생성기(무→도메인, 비결정적). 결과 타입 SpinResultModel은 model에서 import
+ export function spinSlot(): SpinResultModel { /* Math.random */ }
+ ```
+
+ > 도메인 모델이 뷰 형태를 다 품으면 중간 변환을 없앤다 — `buildWeek` util 대신 `AttendanceStreakModel.week`로 흡수.
+
  ## 네이밍
  
  | 구분 | 패턴 | 예시 |
  |------|------|------|
  | 파일명 | `{역할}.model.ts` | `home.model.ts` |
- | 객체 모델 (interface · 객체들의 union) | `{Feature}{SubFeature}{역할}Model` | `HomeDetailModel` |
- | 원시 타입 별칭 (literal/primitive union) | `{Feature}{SubFeature}{역할}Type` | `TmoneyPassStatusType` |
- | 변환 함수 | `to{ModelName}` | `toHomeDetailModel` |
+ | export interface | `{Feature}{SubFeature}{역할}Model` | `HomeDetailModel` |
+ | export type (객체 · 객체 union) | `{Feature}{SubFeature}{역할}Model` | `RewardClaimModel` |
+ | export type (원시 · literal union) | `{Feature}{SubFeature}{역할}Type` | `TmoneyPassStatusType` |
+ | 변환 함수 (서버↔도메인, 양방향) | `to{Model}` | `toHomeDetailModel`(서버→도메인), `toPostSpinParams`(도메인→서버) |
  
  > SubFeature가 없거나 "Index"면 생략. Feature 이름은 축약 없이 완전히 포함, 역할은 구체적으로(`Data`보다 `BalanceData`).
- > `Model`/`Type` 구분은 **문법(interface/type)이 아니라 의미**로 가른다. 모델 = "다양한 모습을 한 **데이터의 집합**(객체)". 따라서 객체는 `Model` — interface뿐 아니라 **객체들의 discriminated union도 `Model`**(예: `RewardClaimModel`). 원시 형태(`type StatusType = 'A' | 'B'` 같은 literal/primitive union 등 비객체)는 모델이 아니므로 `Type`.
+ > **suffix는 `export`하는 선언에만 강제**한다(파일 내부 전용 보조 타입은 자유 — 예: union을 이루는 비-export 멤버). `interface`는 객체만 선언하므로 export하면 항상 `Model`. `type`은 **문법이 아니라 의미**로 가른다 — 객체·객체들의 discriminated union은 `Model`(예: `RewardClaimModel`), 원시 형태(`type StatusType = 'A' | 'B'` 같은 literal/primitive union 등 비객체)는 `Type`.
+ > **함수는 변환 함수에만** `to{Model}`을 강제한다. 서버↔도메인 변환(응답→모델 *또는* 모델→request 타입)이 아니면(타입 가드·헬퍼·생성기 등) 이 규칙과 무관하며 일반 함수 네이밍을 쓴다.
 
  
  ## 작성 규칙
  
  - 모든 필드에 JSDoc 주석 필수 — 한 줄 `/** ... */` 금지, 항상 여러 줄 형식 (본문 예시 참고)
  - 변환 함수: 구조 분해 → 직접 반환. 복잡한 조건은 `ts-pattern`
- - **의존 금지**: React 코드(Container/Components/Queries/Hooks/Contexts), `external/`. 단 `external/apis/types/`(서버 응답 원본 타입)만 import 허용
+ - **의존 금지**: React 코드(Container/Components/Queries/Hooks/Contexts), `external/`. 단 `external/apis/types/`(서버 응답·요청 원본 타입)만 import 허용
  
  **Models vs API Types**
  
  | 위치 | 역할 | 예시 |
  |------|------|------|
- | `external/apis/types/` | 서버 응답 원본 타입 | `HomeDetailStatusResponse` |
+ | `external/apis/types/` | 서버 응답·요청 원본 타입 | `HomeDetailStatusResponse`, `PostSpinParams` |
  | `models/` | UI에서 사용할 변환 타입 | `HomeDetailStatusModel` |
  
  > 모델 타입을 `types/` 폴더에 두지 말 것 — `models/*.model.ts`에 둔다.

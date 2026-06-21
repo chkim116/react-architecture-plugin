@@ -7,7 +7,7 @@ URL 쿼리/동적 파라미터를 타입화된 객체로 변환하는 훅 패턴
 - `useParams` / `useSearchParams`는 **직접 호출 금지**. 반드시 `hooks/`에 파라미터 훅으로 래핑해서 사용한다.
 - Page(Feature) 당 **하나**의 파라미터 훅만 정의한다. 파라미터 훅이 유일한 진입점이다.
 - 파편화되어 있으면 어떤 파라미터가 들어오고 어떻게 관리되는지 알기 어렵다.
-- 파라미터 훅 내부에서는 shared-modules의 `useQueryParser`를 사용한다.
+- 파라미터 훅 내부에서는 shared 모듈인 `useQueryParser`를 사용한다.
 - Page, Component 모두 `useParams` / `useSearchParams` 직접 호출 금지.
 
 ## 구현 패턴
@@ -111,7 +111,7 @@ Context 등 URL 외 소스가 필요할 때만 훅 내부에서 후처리한다.
 | 인터페이스 | `{전체경로}Params` | `RunDetailSharePreviewParams` |
 | 정제 함수 | `refine{전체경로}QueryParams` | `refineRunDetailSharePreviewQueryParams` |
 
-> SubFeature가 "Index"인 경우 생략, Common은 "Common"을 SubFeature 자리에 사용 ([folder-conventions.md](../docs/folder-naming.md) 규칙 준수)
+> SubFeature가 "Index"인 경우 생략, Common은 "Common"을 SubFeature 자리에 사용 ([folder-conventions.md](./folder-conventions.md) 규칙 준수)
 
 ## 파일 위치
 
@@ -121,7 +121,7 @@ Context 등 URL 외 소스가 필요할 때만 훅 내부에서 후처리한다.
 | SubFeature | `src/features/{Feature}/{SubFeature}/Index/hooks/use{Feature}{SubFeature}Params.ts` |
 | Common | `src/features/{Feature}/common/hooks/use{Feature}CommonParams.ts` |
 
-Page prefix 구조(`pages/` + `hooks/`)를 사용하는 앱은 [folder-naming.md](../docs/folder-naming.md)의 `hooks/use{Page}Params.ts` 규칙을 따른다.
+Page prefix 구조(`pages/` + `hooks/`)를 사용하는 앱은 [folder-conventions.md](./folder-conventions.md)의 `hooks/use{Page}Params.ts` 규칙을 따른다.
 
 ## JSDoc
 
@@ -155,7 +155,7 @@ interface RunListParams {
 
 ## 기반 훅: useQueryParser
 
-쿼리 파라미터를 추출하는 공용 훅은 `useQueryParser`를 사용한다. 상세 구현은 [shared-modules.md](./shared-modules.md#usequeryparser)를 참조한다.
+쿼리 파라미터를 추출하는 공용 훅은 `useQueryParser`를 사용한다. 상세 구현은 [modules/use-query-parser.md](./modules/use-query-parser.md)를 참조한다.
 
 ```typescript
 import { useQueryParser } from '@/shared/hooks/useQueryParser';

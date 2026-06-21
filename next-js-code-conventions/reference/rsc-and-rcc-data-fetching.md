@@ -85,3 +85,24 @@ export function ChildContainer() {
 |------|------|
 | RSC에서 prefetch 가능 (API 호출) | `useSuspenseQuery` |
 | RSC에서 prefetch 불가 (앱브릿지, 스토리지) | `useQuery` |
+
+### 서버에서만 쓰는 GET은 일반 API 호출 허용
+
+RSC 안에서 **서버에서만 사용하고 끝나는**(클라이언트로 hydration 하거나 하위 RCC에서 재사용하지 않는) GET이라면, React Query 없이 `external/apis/`의 일반 API 함수를 직접 `await`해도 된다. 캐싱·재사용 이점이 없는데 굳이 `queryOptions`로 감쌀 필요가 없다.
+
+- 클라이언트에서 다시 쓰거나 `QueriesHydration`으로 내려야 하면 → `useSuspenseQuery` + `queryOptions`.
+- 이 RSC 안에서 렌더에만 쓰고 끝 → 일반 API 호출 OK.
+- 단, **어느 경우든 서버 응답은 그대로 쓰지 않고 데이터 모델링을 거친다.** ([data-modeling.md](../../react-code-conventions/reference/data-modeling.md))
+
+```tsx
+// src/features/Feature/index.tsx (RSC) — 서버에서만 쓰고 끝나는 GET
+import { homeApi } from 'external/apis/home.api';
+import { toHomeDetailModel } from 'models/home.model';
+
+export default async function FeaturePage() {
+  const response = await homeApi.fetchHomeDetail();
+  const homeDetail = toHomeDetailModel(response); // 모델링은 그대로 필수
+
+  return <FeatureView homeDetail={homeDetail} />;
+}
+```
